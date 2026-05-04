@@ -27,4 +27,8 @@ include(
     "common",
     "client-redis",
     "inventory-event",
+    "user",
+    "identification",
+    "auth",
+    "client-ses"
 )
