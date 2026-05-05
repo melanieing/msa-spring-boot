@@ -4,21 +4,17 @@ import dev.ktcloud.black.order.order.application.dto.OrderLineItemDto
 import dev.ktcloud.black.order.order.domain.entity.OrderDomainEntity
 import dev.ktcloud.black.order.order.domain.vo.OrderStatus
 
-interface CreateOrderCommand {
-    fun create(command: List<In>): Out
+interface FetchOrderQuery {
+    fun fetchOrder(query: In): Out
 
     data class In(
-        val inventoryId: Long,
-        val productId: String,
-        val skuCode: String,
-        val price: Int,
-        val quantity: Int,
+        val id: Long
     )
 
     data class Out(
         val id: Long,
         val status: OrderStatus,
-        val orderLineItems: List<OrderLineItemDto>,
+        val orderLineItems: List<OrderLineItemDto>
     ) {
         companion object {
             fun from(order: OrderDomainEntity): Out {
