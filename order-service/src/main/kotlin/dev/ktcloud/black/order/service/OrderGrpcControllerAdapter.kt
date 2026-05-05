@@ -6,10 +6,8 @@ import dev.ktcloud.black.order.order.application.port.inbound.FetchOrderQuery
 import dev.ktcloud.black.order.order.application.port.inbound.FetchOrdersQuery
 import dev.ktcloud.black.order.order.domain.vo.OrderStatus
 import dev.ktcloud.black.order.service.adapter.presentation.web.inbound.grpc.CreateOrderRequest
-import dev.ktcloud.black.order.service.adapter.presentation.web.inbound.grpc.CreateOrderResponse
 import dev.ktcloud.black.order.service.adapter.presentation.web.inbound.grpc.Empty
 import dev.ktcloud.black.order.service.adapter.presentation.web.inbound.grpc.FetchOrderRequest
-import dev.ktcloud.black.order.service.adapter.presentation.web.inbound.grpc.FetchOrderResponse
 import dev.ktcloud.black.order.service.adapter.presentation.web.inbound.grpc.FetchOrdersResponse
 import dev.ktcloud.black.order.service.adapter.presentation.web.inbound.grpc.OrderListItemResponseDto
 import dev.ktcloud.black.order.service.adapter.presentation.web.inbound.grpc.OrderResponseDto
@@ -45,7 +43,7 @@ class OrderGrpcControllerAdapter(
             .build()
     }
 
-    override suspend fun createOrder(request: CreateOrderRequest): CreateOrderResponse {
+    override suspend fun createOrder(request: CreateOrderRequest): OrderResponseDto {
         val created = createOrderCommand.create(
                 request.itemsList.map {
                     CreateOrderCommand.In(
@@ -58,31 +56,23 @@ class OrderGrpcControllerAdapter(
                 },
             )
 
-        val orderResponseDto =  buildOrderResponseDto(
+        return buildOrderResponseDto(
             id = created.id,
             status = created.status,
             orderLineItemDtos = created.orderLineItems
         )
-
-        return CreateOrderResponse.newBuilder()
-            .setOrder(orderResponseDto)
-            .build()
     }
 
-    override suspend fun fetchOrder(request: FetchOrderRequest): FetchOrderResponse {
+    override suspend fun fetchOrder(request: FetchOrderRequest): OrderResponseDto {
         val order = fetchOrderQuery.fetchOrder(
             FetchOrderQuery.In(request.id)
         )
 
-        val orderResponseDto =  buildOrderResponseDto(
+        return buildOrderResponseDto(
             id = order.id,
             status = order.status,
             orderLineItemDtos = order.orderLineItems
         )
-
-        return FetchOrderResponse.newBuilder()
-            .setOrder(orderResponseDto)
-            .build()
     }
 
     override suspend fun fetchOrders(request: Empty): FetchOrdersResponse {

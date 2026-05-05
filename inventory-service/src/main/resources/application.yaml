@@ -1,18 +1,24 @@
 spring:
   application:
-    name: order-service
+    name: inventory-service
 
   datasource:
-    url: jdbc:postgresql://localhost:7002/order_db
-    username: order-service
-    password: order-service
+    url: jdbc:postgresql://localhost:7004/inventory_db
+    username: inventory-service
+    password: inventory-service
     driver-class-name: org.postgresql.Driver
+
+  data:
+    redis:
+      host: localhost
+      port: 7005
+      password: inventory-service
 
   kafka:
     bootstrap-servers: localhost:7003
 
     consumer:
-      group-id: order-service-group
+      group-id: inventory-service-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
@@ -26,8 +32,8 @@ spring:
       inventory-reserve-request: inventory-reserve-request-topic
 
 server:
-  port: 8002
+  port: 8003
 
 grpc:
   server:
-    port: 9002
+    port: 9003
