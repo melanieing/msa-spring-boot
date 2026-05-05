@@ -1,10 +1,10 @@
 package dev.ktcloud.black.product.domain.entity
 
-import java.math.BigDecimal
+import java.util.UUID
 
 data class ProductDomainEntity(
-    val id: String = "",
+    val id: UUID = UUID.randomUUID(),
     val name: String,
     val description: String,
-    val price: BigDecimal,
+    val price: Int,
 )

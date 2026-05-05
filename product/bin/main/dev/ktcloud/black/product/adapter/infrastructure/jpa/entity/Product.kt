@@ -10,7 +10,6 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.SQLDelete
 import org.hibernate.type.SqlTypes
-import java.math.BigDecimal
 import java.sql.Types
 
 @SQLDelete(sql = "UPDATE products SET deleted_at = NOW() WHERE id = ?")
@@ -30,5 +29,5 @@ data class Product(
     val description: String,
 
     @JdbcTypeCode(Types.NUMERIC)
-    val price: BigDecimal,
+    val price: Int,
 ): BaseOrmEntity()

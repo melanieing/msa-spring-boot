@@ -1,7 +1,5 @@
 package dev.ktcloud.black.product.application.port.inbound
 
-import java.math.BigDecimal
-
 interface FetchProductQuery {
     fun fetch(query: In): Out
 
@@ -13,6 +11,6 @@ interface FetchProductQuery {
         val id: String,
         val name: String,
         val description: String,
-        val price: BigDecimal,
+        val price: Int,
     )
 }

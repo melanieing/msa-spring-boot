@@ -15,7 +15,7 @@ class ProductQueryService(
         val products = productQueryOutboundPort.fetchAll()
 
         return products.map { FetchAllProductsQuery.Out(
-            id = it.id,
+            id = it.id.toString(),
             name = it.name,
             description = it.description,
             price = it.price,
@@ -27,7 +27,7 @@ class ProductQueryService(
         val product = productQueryOutboundPort.fetch(query.id)
 
         return FetchProductQuery.Out(
-            id = product.id,
+            id = product.id.toString(),
             name = product.name,
             description = product.description,
             price = product.price,
