@@ -20,6 +20,4 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-impl:${Versions.JWT}")
 
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:${Versions.JWT}")
-
-
 }

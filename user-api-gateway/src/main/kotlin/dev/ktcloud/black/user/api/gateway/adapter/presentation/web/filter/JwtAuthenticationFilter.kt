@@ -1,10 +1,8 @@
-package dev.ktcloud.black.auth.adapter.presentation.web.filter
+package dev.ktcloud.black.user.api.gateway.adapter.presentation.web.filter
 
 import dev.ktcloud.black.auth.application.service.jwt.JwtResolver
 import dev.ktcloud.black.user.domain.vo.UserDetail
 import dev.ktcloud.black.user.domain.vo.UserRole
-import io.jsonwebtoken.Claims
-import io.jsonwebtoken.JwtParser
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse

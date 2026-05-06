@@ -12,20 +12,20 @@ class RedisConfig {
     }
 
     @Bean
-    fun decreaseInventoryScript(): RedisScript<Long> {
-        val resource = ClassPathResource("scripts/decrease_inventory.lua")
-        return RedisScript.of(resource, Long::class.java)
+    fun decreaseInventoryScript(): RedisScript<String> {
+        val resource = ClassPathResource("scripts/redis/decrease_inventory.lua")
+        return RedisScript.of(resource, String::class.java)
     }
 
     @Bean
-    fun increaseInventoryScript(): RedisScript<Long> {
-        val resource = ClassPathResource("scripts/increase_inventory.lua")
-        return RedisScript.of(resource, Long::class.java)
+    fun increaseInventoryScript(): RedisScript<String> {
+        val resource = ClassPathResource("scripts/redis/increase_inventory.lua")
+        return RedisScript.of(resource, String::class.java)
     }
 
     @Bean
-    fun setInventoryScript(): RedisScript<Long> {
-        val resource = ClassPathResource("scripts/set_inventory.lua")
-        return RedisScript.of(resource, Long::class.java)
+    fun setInventoryScript(): RedisScript<String> {
+        val resource = ClassPathResource("scripts/redis/set_inventory.lua")
+        return RedisScript.of(resource, String::class.java)
     }
 }

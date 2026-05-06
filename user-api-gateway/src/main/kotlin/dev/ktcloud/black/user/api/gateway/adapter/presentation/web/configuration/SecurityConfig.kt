@@ -1,6 +1,6 @@
-package dev.ktcloud.black.auth.adapter.presentation.web.configuration
+package dev.ktcloud.black.user.api.gateway.adapter.presentation.web.configuration
 
-import dev.ktcloud.black.auth.adapter.presentation.web.filter.JwtAuthenticationFilter
+import dev.ktcloud.black.user.api.gateway.adapter.presentation.web.filter.JwtAuthenticationFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity

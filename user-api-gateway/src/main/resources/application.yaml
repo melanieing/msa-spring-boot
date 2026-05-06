@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: user-api-gateway
+
+grpc:
+  client:
+    product-service:
+      address: 'static://localhost:9001'
+      negotiation-type: plaintext
+    order-service:
+      address: 'static://localhost:9002'
+      negotiation-type: plaintext
+    inventory-service:
+      address: 'static://localhost:9003'
+      negotiation-type: plaintext
+
+server:
+  port: 8100
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      path-mapping:
+        health: healthz
+  endpoint:
+    health:
+      show-details: always

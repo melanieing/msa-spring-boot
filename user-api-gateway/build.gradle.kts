@@ -1,7 +1,8 @@
 object Versions {
-    val GRPC = "4.34.1"
-    val GRPC_KOTLIN = "1.4.1"
-    val GRPC_PROTO = "1.80.0"
+    const val GRPC = "4.34.1"
+    const val GRPC_KOTLIN = "1.4.1"
+    const val GRPC_PROTO = "1.80.0"
+    const val JWT = "0.12.6"
 }
 
 plugins {
@@ -10,11 +11,10 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":order"))
+    implementation(project(":auth"))
+    implementation(project(":user"))
 
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-
-    implementation("org.springframework.boot:spring-boot-starter-jdbc")
 
     implementation("net.devh:grpc-client-spring-boot-starter:3.1.0.RELEASE")
 
@@ -25,6 +25,20 @@ dependencies {
 
     implementation("io.grpc:grpc-stub:${Versions.GRPC_PROTO}")
     implementation("io.grpc:grpc-netty-shaded:${Versions.GRPC_PROTO}")
+
+    implementation("org.springframework.cloud:spring-cloud-starter-gateway")
+
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
+    implementation("io.jsonwebtoken:jjwt-api:${Versions.JWT}")
+
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:${Versions.JWT}")
+
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:${Versions.JWT}")
 }
 
 sourceSets{
