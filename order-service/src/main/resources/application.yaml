@@ -8,6 +8,12 @@ spring:
     password: order-service
     driver-class-name: org.postgresql.Driver
 
+  jpa:
+    hibernate:
+      ddl-auto: create
+    generate-ddl: true
+    show-sql: true
+
   kafka:
     bootstrap-servers: localhost:7003
 

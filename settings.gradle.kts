@@ -30,5 +30,6 @@ include(
     "user",
     "identification",
     "auth",
-    "client-ses"
+    "client-ses",
+    "api-gateway",
 )
