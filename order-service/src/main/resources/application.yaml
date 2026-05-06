@@ -31,3 +31,13 @@ server:
 grpc:
   server:
     port: 9002
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      path-mapping:
+        health: healthz
+  endpoint:
+    health:
+      show-details: always

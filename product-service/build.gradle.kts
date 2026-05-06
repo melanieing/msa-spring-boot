@@ -12,6 +12,8 @@ plugins {
 dependencies {
     implementation(project(":product"))
 
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
 
     implementation("net.devh:grpc-server-spring-boot-starter:3.1.0.RELEASE")

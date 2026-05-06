@@ -37,3 +37,13 @@ server:
 grpc:
   server:
     port: 9003
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      path-mapping:
+        health: healthz
+  endpoint:
+    health:
+      show-details: always
