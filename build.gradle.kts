@@ -1,10 +1,15 @@
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
+object Versions {
+	val KOTLIN = "2.3.20"
+}
+
 plugins {
 	java
 	kotlin("jvm") version "2.3.20"
-	kotlin("kapt") version "1.9.22"
+	kotlin("kapt") version "2.3.20"
 	kotlin("plugin.spring") version "2.3.20"
+	kotlin("plugin.jpa") version "2.3.20"
 	id("org.springframework.boot") version "3.3.0"
 	id("io.spring.dependency-management") version "1.1.7"
 }
