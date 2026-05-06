@@ -5,10 +5,12 @@ import dev.ktcloud.black.product.service.adapter.presentation.web.inbound.grpc.F
 import dev.ktcloud.black.product.service.adapter.presentation.web.inbound.grpc.ProductServiceGrpcKt
 import dev.ktcloud.black.user.api.gateway.application.product.port.inbound.FetchProductQuery
 import dev.ktcloud.black.user.api.gateway.application.product.port.inbound.FetchProductsQuery
+import net.devh.boot.grpc.client.inject.GrpcClient
 import org.springframework.stereotype.Service
 
 @Service
 class ProductQueryService(
+    @GrpcClient("product-service")
     private val productServiceStub: ProductServiceGrpcKt.ProductServiceCoroutineStub
 ): FetchProductQuery, FetchProductsQuery {
     override suspend fun fetchProduct(query: FetchProductQuery.In): FetchProductQuery.Out {

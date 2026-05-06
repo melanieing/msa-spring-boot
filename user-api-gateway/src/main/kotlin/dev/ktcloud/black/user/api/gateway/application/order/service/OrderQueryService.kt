@@ -7,10 +7,12 @@ import dev.ktcloud.black.order.service.adapter.presentation.web.inbound.grpc.Ord
 import dev.ktcloud.black.user.api.gateway.application.order.dto.OrderLineItemDto
 import dev.ktcloud.black.user.api.gateway.application.order.port.inbound.FetchOrderQuery
 import dev.ktcloud.black.user.api.gateway.application.order.port.inbound.FetchOrdersQuery
+import net.devh.boot.grpc.client.inject.GrpcClient
 import org.springframework.stereotype.Service
 
 @Service
 class OrderQueryService(
+    @GrpcClient("order-service")
     private val orderServiceStub: OrderServiceGrpcKt.OrderServiceCoroutineStub
 ): FetchOrderQuery, FetchOrdersQuery {
     private fun mapOrderLineItem(orderLineItem: OrderListItemResponseDto): OrderLineItemDto {

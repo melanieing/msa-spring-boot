@@ -13,6 +13,8 @@ dependencies {
     implementation(project(":identification"))
     implementation(project(":client-ses"))
 
+    implementation("org.springframework.boot:spring-boot-starter-web")
+
     implementation("org.springframework.boot:spring-boot-starter-security")
 
     implementation("io.jsonwebtoken:jjwt-api:${Versions.JWT}")

@@ -36,7 +36,14 @@ class InventoryCommandService(
 
         val saved = inventoryStateCommandOutboundPort.save(inventoryDomainEntity)
 
-        return CreateInventoryCommand.Out.from(saved)
+        val loaded = distributedLock.execute(
+            key = InventoryLockKey(saved.id).toLockKey(),
+            func = {
+                loadCacheSyncedInventoryOutboundPort.loadCacheSyncedInventory(saved.id)
+            }
+        )
+
+        return CreateInventoryCommand.Out.from(loaded)
     }
 
     @Transactional

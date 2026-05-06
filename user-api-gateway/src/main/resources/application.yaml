@@ -14,6 +14,9 @@ grpc:
       address: 'static://localhost:9003'
       negotiation-type: plaintext
 
+jwt:
+  secret: 'v7S6A9yB2E5H8KcNfUjXnZr4u7x!A%D*G-'
+
 server:
   port: 8100
 
@@ -26,3 +29,11 @@ management:
   endpoint:
     health:
       show-details: always
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    groups-order: DESC
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs

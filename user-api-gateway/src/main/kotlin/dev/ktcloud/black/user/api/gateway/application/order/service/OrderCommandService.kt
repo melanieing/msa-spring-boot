@@ -6,10 +6,12 @@ import dev.ktcloud.black.order.service.adapter.presentation.web.inbound.grpc.Ord
 import dev.ktcloud.black.order.service.adapter.presentation.web.inbound.grpc.OrderServiceGrpcKt
 import dev.ktcloud.black.user.api.gateway.application.order.dto.OrderLineItemDto
 import dev.ktcloud.black.user.api.gateway.application.order.port.inbound.CreateOrderCommand
+import net.devh.boot.grpc.client.inject.GrpcClient
 import org.springframework.stereotype.Service
 
 @Service
 class OrderCommandService(
+    @GrpcClient("order-service")
     private val orderServiceStub: OrderServiceGrpcKt.OrderServiceCoroutineStub
 ): CreateOrderCommand {
     private fun mapOrderLineItem(orderLineItem: OrderListItemResponseDto): OrderLineItemDto {

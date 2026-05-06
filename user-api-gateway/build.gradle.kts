@@ -11,9 +11,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":auth"))
-    implementation(project(":user"))
-
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     implementation("net.devh:grpc-client-spring-boot-starter:3.1.0.RELEASE")
@@ -22,15 +19,14 @@ dependencies {
     implementation("io.grpc:grpc-kotlin-stub:${Versions.GRPC_KOTLIN}")
 
     implementation("io.grpc:grpc-protobuf:${Versions.GRPC_PROTO}")
-
+    implementation("io.grpc:grpc-netty:${Versions.GRPC_PROTO}")
     implementation("io.grpc:grpc-stub:${Versions.GRPC_PROTO}")
     implementation("io.grpc:grpc-netty-shaded:${Versions.GRPC_PROTO}")
 
-    implementation("org.springframework.cloud:spring-cloud-starter-gateway")
+    implementation("org.springframework.cloud:spring-cloud-starter-gateway:4.1.9")
+    implementation("org.springframework.boot:spring-boot-starter-webflux:3.3.13")
 
-    implementation("org.springframework.boot:spring-boot-starter-webflux")
-
-    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.15")
+    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0")
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
