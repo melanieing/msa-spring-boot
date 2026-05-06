@@ -10,9 +10,9 @@ import org.springframework.stereotype.Component
 @Component
 class InventoryRedisCommandAdapter(
     private val redisTemplate: RedisTemplate<String, String>,
-    private val decreaseInventoryScript: RedisScript<String>,
-    private val increaseInventoryScript: RedisScript<String>,
-    private val setInventoryScript: RedisScript<String>,
+    private val decreaseInventoryScript: RedisScript<Long>,
+    private val increaseInventoryScript: RedisScript<Long>,
+    private val setInventoryScript: RedisScript<Long>,
 ): InventoryCacheCommandOutboundPort {
     override fun decrease(inventoryId: Long, amount: Int, eventId: Long): Int {
         val redisKey = InventoryRedisKey(inventoryId).toRedisKey()

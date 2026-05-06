@@ -3,7 +3,6 @@ package dev.ktcloud.black.inventory.application.service
 import dev.ktcloud.black.client.redis.api.DistributedLock
 import dev.ktcloud.black.client.redis.api.IdempotentEventProcessor
 import dev.ktcloud.black.inventory.application.dto.event.outbound.InventoryReservedResultEvent
-import dev.ktcloud.black.inventory.application.port.cache.outbound.InventoryCacheCommandOutboundPort
 import dev.ktcloud.black.inventory.application.port.event.InventoryOrderEventPublishPort
 import dev.ktcloud.black.inventory.application.port.inbound.command.CreateInventoryCommand
 import dev.ktcloud.black.inventory.application.port.inbound.command.DecreaseInventoryCommand
@@ -25,7 +24,6 @@ class InventoryCommandService(
     private val loadCacheSyncedInventoryOutboundPort: LoadCacheSyncedInventoryOutboundPort,
     private val updateInventoryCommandOutboundPort: UpdateInventoryCommandOutboundPort,
     private val distributedLock: DistributedLock,
-    private val inventoryCacheCommandOutboundPort: InventoryCacheCommandOutboundPort,
     private val idempotentEventProcessor: IdempotentEventProcessor,
     private val inventoryOrderEventPublishPort: InventoryOrderEventPublishPort
 ): CreateInventoryCommand, DecreaseInventoryCommand, IncreaseInventoryCommand {
@@ -58,8 +56,7 @@ class InventoryCommandService(
             idempotentEventProcessor.withIdempotencyProcess(
                 InventoryDecreaseIdempotencyKey(command.inventoryId, command.orderId).toIdempotencyKey(),
                 func = {
-                    val eventId = updateInventoryCommandOutboundPort.decrease(command.inventoryId, command.amount)
-                    inventoryCacheCommandOutboundPort.decrease(command.inventoryId, command.amount, eventId)
+                    updateInventoryCommandOutboundPort.decrease(command.inventoryId, command.amount)
                 }
             )
         } catch (_: InventoryException.InventoryNotEnough) {
@@ -105,10 +102,9 @@ class InventoryCommandService(
             )
         }
 
-        val eventId = updateInventoryCommandOutboundPort.increase(command.inventoryId, command.amount)
-        val amount = inventoryCacheCommandOutboundPort.increase(command.inventoryId, command.amount, eventId)
+        val quantity = updateInventoryCommandOutboundPort.increase(command.inventoryId, command.amount)
 
-        inventory.setQuantity(amount)
+        inventory.setQuantity(quantity)
 
         return IncreaseInventoryCommand.Out.from(inventory)
     }
