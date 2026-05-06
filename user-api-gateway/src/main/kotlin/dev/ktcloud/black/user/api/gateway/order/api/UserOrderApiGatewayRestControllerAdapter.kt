@@ -29,7 +29,6 @@ class UserOrderApiGatewayRestControllerAdapter(
         TODO("Not yet implemented")
     }
 
-    @PreAuthorize(UserRole.Auto)
     @Operation(summary = "주문 전체 조회")
     @ApiResponse(responseCode = "200", description = "주문 전체 조회 성공")
     @ResponseStatus(value = HttpStatus.OK)
