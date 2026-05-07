@@ -7,8 +7,6 @@ out/
 
 .gradle/
 build/
-!gradle/wrapper/gradle-wrapper.jar
-!gradle/wrapper/gradle-wrapper.properties
 
 *.kotlin_module
 .kotlin/
@@ -36,4 +34,10 @@ build/
 .DS_Store
 Thumbs.db
 
+# Gradle wrapper 는 *.jar 와 *.properties 패턴에도 불구하고 git 에 포함되어야 함.
+# .gitignore 는 마지막으로 매치된 패턴이 이김 → negation 을 파일 끝에 둬야 한다.
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Claude Code worktree 메타데이터 (개인 작업 환경)
 .claude/
