@@ -1,0 +1,112 @@
+# ─────────────────────────────────────────────────────────────────────────
+# GitHub Actions: 4개 서비스를 한 번에 빌드해서 ECR 에 push
+# ─────────────────────────────────────────────────────────────────────────
+# 핵심 설계:
+#   - matrix 전략 — 한 yaml 에 4개 서비스 정의, 병렬 실행 (5분 → 1.5분 단축)
+#   - OIDC 페더레이션 — GitHub Secrets 에 AWS access key 안 박음 (시니어 패턴)
+#   - docker/build-push-action — GHA layer cache 로 2회차 빌드 ~70% 단축
+#   - 두 태그 동시 push — git sha (정확 추적) + latest (편의)
+#
+# 트리거:
+#   - main 브랜치 push (PR 머지 후 자동)
+#   - claude/* 브랜치 push (worktree 작업 검증)
+#   - 수동 (workflow_dispatch)
+# ─────────────────────────────────────────────────────────────────────────
+
+name: Build and Push to ECR
+
+on:
+  push:
+    branches:
+      - main
+      - claude/**           # worktree 브랜치도 trigger (검증 목적)
+    paths:                  # 빌드 흐름과 관련 없는 파일 변경 시 skip
+      - "**/*.kt"
+      - "**/*.java"
+      - "**/*.proto"
+      - "**/build.gradle.kts"
+      - "**/settings.gradle.kts"
+      - "**/Dockerfile"
+      - "gradle/**"
+      - ".dockerignore"
+      - ".github/workflows/build-and-push.yml"
+  workflow_dispatch: {}     # GitHub UI 에서 수동 실행 버튼
+
+# OIDC 페더레이션을 위한 권한.
+# id-token: write — GitHub 이 서명한 OIDC ID 토큰을 받아 AWS 에 제시
+# contents: read  — 우리 코드 checkout
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  # 모든 job 공통 환경 변수. GitHub Settings > Variables 에서 등록한 값 참조.
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN }}
+
+jobs:
+  build:
+    name: Build ${{ matrix.service }}
+    runs-on: ubuntu-latest
+
+    # matrix: 4개 서비스에 대해 같은 step 들을 병렬로 실행.
+    strategy:
+      fail-fast: false      # 한 서비스 빌드 실패해도 나머지는 계속
+      matrix:
+        service:
+          - user-api-gateway
+          - product-service
+          - order-service
+          - inventory-service
+
+    steps:
+      # ─── 1. 코드 체크아웃 ───────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ─── 2. AWS 자격증명 받기 (OIDC 페더레이션) ─────────────────
+      # GitHub 이 발급한 OIDC ID 토큰을 AWS STS 에 제시 → 임시 자격증명 받음.
+      # 임시 자격증명은 이 job 실행 동안만 유효 (보통 1시간).
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ─── 3. ECR 로그인 ──────────────────────────────────────────
+      # action 이 자동으로 'aws ecr get-login-password' 실행 + docker login.
+      # registry URL 도 output 으로 제공 (steps.ecr-login.outputs.registry).
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # ─── 4. Docker Buildx 설정 (멀티스테이지 + cache 지원) ──────
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ─── 5. 이미지 빌드 + push ─────────────────────────────────
+      # context = repo 전체 (멀티모듈 Gradle 빌드를 Dockerfile 안에서 함).
+      # 두 태그 동시 push:
+      #   - $sha     : 정확히 어느 commit 인지 추적 (Helm values 에 박을 값)
+      #   - latest   : 편의용 (Helm 차트가 latest 참조 시 자동 갱신)
+      # cache-from/to type=gha : GitHub Actions cache 사용 — 2회차 빌드 빨라짐.
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.service }}/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.ecr-login.outputs.registry }}/${{ matrix.service }}:${{ github.sha }}
+            ${{ steps.ecr-login.outputs.registry }}/${{ matrix.service }}:latest
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+      # ─── 6. 결과 요약 (로그에 잘 보이게) ──────────────────────
+      - name: Summary
+        run: |
+          echo "## Pushed image" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- service: \`${{ matrix.service }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- registry: \`${{ steps.ecr-login.outputs.registry }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- tags: \`${{ github.sha }}\`, \`latest\`" >> $GITHUB_STEP_SUMMARY
