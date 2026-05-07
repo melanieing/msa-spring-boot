@@ -1,0 +1,68 @@
+# product-service 차트 기본값. 같은 templates/ 사용 (user-api-gateway 와 공통).
+
+image:
+  repository: 601766312629.dkr.ecr.ap-northeast-2.amazonaws.com/product-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+# ─── HTTP(8001) + gRPC(9001) 듀얼 포트 ───────────────────────────
+service:
+  type: ClusterIP
+
+ports:
+  - name: http
+    containerPort: 8001
+    servicePort: 80                   # 외부 호출 시 :80
+  - name: grpc
+    containerPort: 9001
+    servicePort: 9001                 # gRPC 는 일반적으로 같은 번호 노출
+
+# ─── 리소스 ───────────────────────────────────────────────────────
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# ─── Health (Spring Boot Actuator, http 포트 사용) ───────────────
+healthcheck:
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    failureThreshold: 3
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 3
+
+# ─── 환경 변수 (DB 연결 등) ───────────────────────────────────────
+env:
+  SPRING_PROFILES_ACTIVE: production
+  # CNPG Cluster service: <cluster-name>-rw (read-write) / -ro (read-only)
+  SPRING_DATASOURCE_URL: jdbc:postgresql://product-db-rw.data.svc.cluster.local:5432/product
+  # 사용자/비번은 CNPG 가 자동 생성한 Secret 에서 가져와야 함 (운영급).
+  # 학습용 placeholder — 실제 부트스트랩 후 K8s Secret 으로 주입 필요.
+  SPRING_DATASOURCE_USERNAME: product_app
+  # SPRING_DATASOURCE_PASSWORD 는 K8s Secret 으로 주입 권장 (현재 미설정)
+
+# ─── ServiceAccount + 보안 ───────────────────────────────────────
+serviceAccount:
+  create: true
+  name: ""
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop: [ALL]

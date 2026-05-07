@@ -1,0 +1,95 @@
+# ─────────────────────────────────────────────────────────────────────────
+# values.yaml — 차트의 기본 설정값
+# ─────────────────────────────────────────────────────────────────────────
+# 'helm install --values <file>' 또는 'helm upgrade --set key=value' 로 override.
+# Argo CD 는 이 파일을 자동으로 읽음 (apps-appset.yaml 의 valueFiles: [values.yaml]).
+# ─────────────────────────────────────────────────────────────────────────
+
+
+# ─── 컨테이너 이미지 ─────────────────────────────────────────────
+image:
+  # ECR repository URL. registry 모듈이 만든 그대로.
+  # AWS 계정 ID 가 사람마다 다르면 helm install 시 --set 으로 override 가능.
+  repository: 601766312629.dkr.ecr.ap-northeast-2.amazonaws.com/user-api-gateway
+
+  # 'latest' 는 편의용. 운영급에서는 git SHA 로 핀 권장 (운영 재현성).
+  tag: latest
+
+  # IfNotPresent: 이미 노드에 같은 tag image 있으면 재pull 안 함 (빠름)
+  # Always: 항상 pull (latest 태그 사용 시 최신 보장에 유리하지만 느림)
+  pullPolicy: IfNotPresent
+
+
+# ─── replica 수 ──────────────────────────────────────────────────
+# 학습용 1개. HA 시연 원하면 2~3개.
+replicaCount: 1
+
+
+# ─── K8s Service + 컨테이너 포트 (list 형식) ─────────────────────
+# 4개 차트가 같은 templates 공유 위해 list 사용.
+# user-api-gateway 는 1개, backend 들은 2개 (HTTP + gRPC).
+service:
+  type: ClusterIP                    # 클러스터 내부 노출만
+
+ports:
+  - name: http                        # named port — Service 가 이걸 targetPort 로 참조
+    containerPort: 8100               # Pod 안의 실제 포트
+    servicePort: 80                   # Service 가 노출하는 포트
+
+
+# ─── 리소스 요청/제한 ────────────────────────────────────────────
+# requests = 스케줄러가 보장하는 최소
+# limits   = OOMKill 임계치
+resources:
+  requests:
+    cpu: 100m                         # 0.1 vCPU
+    memory: 256Mi
+  limits:
+    cpu: 500m                         # 0.5 vCPU
+    memory: 512Mi
+
+
+# ─── Health check (Spring Boot Actuator) ─────────────────────────
+# Spring Boot 가 /actuator/health/{liveness,readiness} 엔드포인트 자동 노출
+healthcheck:
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 60          # 부팅 시간 (Spring Boot 가 60초 정도 걸림)
+    periodSeconds: 30
+    failureThreshold: 3
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 3
+
+
+# ─── 환경 변수 (configmap.yaml 이 K8s ConfigMap 으로 주입) ──────
+env:
+  SPRING_PROFILES_ACTIVE: production
+  # 필요한 환경 변수 추가:
+  # - DB connection (다른 마이크로서비스로 위임이 일반적)
+  # - gRPC client target hosts (다른 service 의 ClusterIP DNS)
+  GRPC_PRODUCT_HOST: product-service.product-service.svc.cluster.local
+  GRPC_ORDER_HOST: order-service.order-service.svc.cluster.local
+  GRPC_INVENTORY_HOST: inventory-service.inventory-service.svc.cluster.local
+
+
+# ─── ServiceAccount (K8s 권한 분리) ──────────────────────────────
+serviceAccount:
+  create: true                        # 차트마다 전용 SA 생성 (least privilege)
+  name: ""                            # 빈 문자열 → '<chart-name>-sa' 자동
+
+
+# ─── Pod 보안 컨텍스트 (보안 best practice) ─────────────────────
+podSecurityContext:
+  runAsNonRoot: true                 # Dockerfile 에서 spring user 로 띄움
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false      # Spring Boot 가 /tmp 쓰기 필요
+  capabilities:
+    drop:
+      - ALL

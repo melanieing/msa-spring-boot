@@ -1,0 +1,11 @@
+apiVersion: v2
+name: inventory-service
+description: |
+  Inventory 도메인 (재고/이벤트소싱) 마이크로서비스.
+  REST(8003) + gRPC(9003). PostgreSQL + Kafka + Redis Cluster (Lua 원자 연산).
+version: 0.1.0
+appVersion: "0.0.1-SNAPSHOT"
+type: application
+keywords: [msa, inventory, event-sourcing, redis, grpc]
+maintainers:
+  - name: melanieing

@@ -1,0 +1,11 @@
+apiVersion: v2
+name: product-service
+description: |
+  Product 도메인 (상품 카탈로그) 마이크로서비스.
+  REST(8001) + gRPC(9001) 듀얼 인터페이스. PostgreSQL 16 (CNPG product-db).
+version: 0.1.0
+appVersion: "0.0.1-SNAPSHOT"
+type: application
+keywords: [msa, product, grpc]
+maintainers:
+  - name: melanieing

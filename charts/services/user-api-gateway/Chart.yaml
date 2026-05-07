@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────────────────────────────────
+# Chart.yaml — Helm 차트의 신원증명서
+# ─────────────────────────────────────────────────────────────────────────
+# Helm 이 'helm install/upgrade' 시 이 파일을 가장 먼저 읽음.
+# Argo CD ApplicationSet 도 이 파일이 있어야 디렉토리를 chart 로 인식.
+# ─────────────────────────────────────────────────────────────────────────
+
+apiVersion: v2                       # Helm 3+ 표준
+name: user-api-gateway
+description: |
+  Market Service MSA 의 단일 진입점 API Gateway.
+  Spring Cloud Gateway (WebFlux) + gRPC clients to backend services.
+
+# 차트 자체 버전 — 차트 구조/templates 변경 시 bump
+version: 0.1.0
+
+# 안에 들어가는 앱 버전 — 우리는 ECR 의 image tag 와 매칭 권장
+# 현재는 string 으로 표시 (build.gradle.kts 의 version)
+appVersion: "0.0.1-SNAPSHOT"
+
+type: application                    # library 차트가 아닌 일반 앱 차트
+
+# 검색/카탈로그용 키워드 (선택)
+keywords:
+  - msa
+  - api-gateway
+  - spring-cloud-gateway
+
+maintainers:
+  - name: melanieing
