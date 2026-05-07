@@ -1,0 +1,82 @@
+# ─────────────────────────────────────────────────────────────────────────
+# Deployment — Pod 를 띄우고 관리
+# ─────────────────────────────────────────────────────────────────────────
+# replicaCount 만큼 Pod 를 띄우고, Pod 죽으면 자동 재생성, rolling update 등.
+# values.yaml 의 replicaCount/image/resources 등을 참조해서 채워짐.
+# ─────────────────────────────────────────────────────────────────────────
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "service.fullname" . }}
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+
+  # selector — 어떤 Pod 가 이 Deployment 의 자식인지 매칭
+  # immutable: Deployment 만든 후 selector 못 바꿈
+  selector:
+    matchLabels:
+      {{- include "service.selectorLabels" . | nindent 6 }}
+
+  template:
+    metadata:
+      labels:
+        {{- include "service.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "service.serviceAccountName" . }}
+
+      # Pod 레벨 보안 설정 (non-root user 등)
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          # 컨테이너 레벨 보안 설정 (capability drop 등)
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          # 노출 포트 (K8s Service 가 이 포트로 트래픽 보냄)
+          ports:
+            - name: http
+              containerPort: {{ .Values.containerPort }}
+              protocol: TCP
+
+          # 환경 변수 — ConfigMap 에서 가져옴
+          envFrom:
+            - configMapRef:
+                name: {{ include "service.fullname" . }}-config
+
+          # ─── Liveness Probe ────────────────────────────────────
+          # K8s 가 주기적으로 호출. 실패하면 Pod 재시작.
+          # Spring Boot Actuator 의 /health/liveness 가 응답.
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthcheck.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.healthcheck.liveness.failureThreshold }}
+
+          # ─── Readiness Probe ───────────────────────────────────
+          # K8s 가 주기적으로 호출. 실패하면 Service 가 트래픽 안 보냄 (Pod 죽이진 않음).
+          # 부팅 중에는 not ready, 부팅 끝나면 ready.
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthcheck.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.healthcheck.readiness.failureThreshold }}
+
+          # 리소스 요청/제한
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

@@ -1,0 +1,28 @@
+# ─────────────────────────────────────────────────────────────────────────
+# Service — Pod 그룹에 안정적인 DNS/IP 부여
+# ─────────────────────────────────────────────────────────────────────────
+# Pod 는 죽으면 IP 가 바뀜. Service 가 그 위에 안정적인 추상화 제공.
+# 클러스터 안에서 'http://user-api-gateway.user-api-gateway.svc.cluster.local'
+# 같은 DNS 이름으로 접근 가능.
+#
+# type=ClusterIP : 클러스터 내부 노출만 (외부 노출은 Ingress 가 별도)
+# ─────────────────────────────────────────────────────────────────────────
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "service.fullname" . }}
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}                # 외부에 노출되는 포트
+      targetPort: http                                 # Pod 안의 named port (= containerPort)
+      protocol: TCP
+
+  # 어떤 Pod 가 이 Service 뒤에 있는지 매칭
+  selector:
+    {{- include "service.selectorLabels" . | nindent 4 }}
