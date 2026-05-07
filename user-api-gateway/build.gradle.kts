@@ -23,8 +23,8 @@ dependencies {
     implementation("io.grpc:grpc-stub:${Versions.GRPC_PROTO}")
     implementation("io.grpc:grpc-netty-shaded:${Versions.GRPC_PROTO}")
 
-    implementation("org.springframework.cloud:spring-cloud-starter-gateway:4.1.9")
-    implementation("org.springframework.boot:spring-boot-starter-webflux:3.3.13")
+    implementation("org.springframework.cloud:spring-cloud-starter-gateway:4.3.0")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")  // 버전은 Spring Boot plugin 이 자동 관리
 
     implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0")
 
