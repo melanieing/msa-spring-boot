@@ -1,0 +1,61 @@
+# order-service 차트 기본값.
+
+image:
+  repository: 601766312629.dkr.ecr.ap-northeast-2.amazonaws.com/order-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+
+ports:
+  - name: http
+    containerPort: 8002
+    servicePort: 80
+  - name: grpc
+    containerPort: 9002
+    servicePort: 9002
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+healthcheck:
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    failureThreshold: 3
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 3
+
+env:
+  SPRING_PROFILES_ACTIVE: production
+  SPRING_DATASOURCE_URL: jdbc:postgresql://order-db-rw.data.svc.cluster.local:5432/order
+  SPRING_DATASOURCE_USERNAME: order_app
+  # Kafka — Strimzi 가 만든 'kafka-kafka-bootstrap' service (default 이름)
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-kafka-bootstrap.data.svc.cluster.local:9092
+
+serviceAccount:
+  create: true
+  name: ""
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop: [ALL]

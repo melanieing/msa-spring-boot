@@ -1,0 +1,65 @@
+# inventory-service 차트 기본값. 가장 많은 의존성 (PG + Kafka + Redis).
+
+image:
+  repository: 601766312629.dkr.ecr.ap-northeast-2.amazonaws.com/inventory-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+
+ports:
+  - name: http
+    containerPort: 8003
+    servicePort: 80
+  - name: grpc
+    containerPort: 9003
+    servicePort: 9003
+
+# 재고는 핫스팟 (PDF 6.3절). 운영급에서는 더 큰 limit 권장.
+resources:
+  requests:
+    cpu: 200m
+    memory: 384Mi
+  limits:
+    cpu: 1000m
+    memory: 768Mi
+
+healthcheck:
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    failureThreshold: 3
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 3
+
+env:
+  SPRING_PROFILES_ACTIVE: production
+  SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-db-rw.data.svc.cluster.local:5432/inventory
+  SPRING_DATASOURCE_USERNAME: inventory_app
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-kafka-bootstrap.data.svc.cluster.local:9092
+  # Redis Cluster — ot-helm 의 RedisCluster CRD 가 만든 service
+  SPRING_REDIS_HOST: redis-leader.data.svc.cluster.local
+  SPRING_REDIS_PORT: "6379"
+  # 비밀번호는 K8s Secret 'redis-secret' 에서 envFrom 으로 가져와야 함 (현재 placeholder)
+
+serviceAccount:
+  create: true
+  name: ""
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop: [ALL]

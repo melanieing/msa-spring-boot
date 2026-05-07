@@ -1,0 +1,11 @@
+apiVersion: v2
+name: order-service
+description: |
+  Order 도메인 (주문/Saga 오케스트레이션) 마이크로서비스.
+  REST(8002) + gRPC(9002). PostgreSQL (Outbox 패턴) + Kafka (saga 메시지).
+version: 0.1.0
+appVersion: "0.0.1-SNAPSHOT"
+type: application
+keywords: [msa, order, saga, outbox, grpc]
+maintainers:
+  - name: melanieing

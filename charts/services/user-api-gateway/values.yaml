@@ -25,16 +25,16 @@ image:
 replicaCount: 1
 
 
-# ─── K8s Service (서비스 노출) ───────────────────────────────────
+# ─── K8s Service + 컨테이너 포트 (list 형식) ─────────────────────
+# 4개 차트가 같은 templates 공유 위해 list 사용.
+# user-api-gateway 는 1개, backend 들은 2개 (HTTP + gRPC).
 service:
-  type: ClusterIP                    # 클러스터 내부 노출만. 외부 노출은 Ingress 또는 LoadBalancer.
-  port: 80                            # Service 가 외부에 노출하는 포트
-  targetPort: 8100                    # Pod 안의 실제 포트 (gateway 의 listen)
+  type: ClusterIP                    # 클러스터 내부 노출만
 
-
-# ─── 컨테이너 포트 정의 ─────────────────────────────────────────
-# user-api-gateway 는 단일 HTTP 포트만. (gRPC 는 클라이언트로만 호출)
-containerPort: 8100
+ports:
+  - name: http                        # named port — Service 가 이걸 targetPort 로 참조
+    containerPort: 8100               # Pod 안의 실제 포트
+    servicePort: 80                   # Service 가 노출하는 포트
 
 
 # ─── 리소스 요청/제한 ────────────────────────────────────────────
