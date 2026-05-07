@@ -66,9 +66,16 @@ subprojects {
 	}
 
 	// 라이브러리 모듈은 bootJar 안 만듦 (mainClass 가 없어서 실패).
-	// 실행 가능한 application 모듈(inventory-service, order-service 등)은
-	// 자기 build.gradle.kts 에서 'tasks.named("bootJar") { enabled = true }' 로 override.
+	// 아래 '실행 가능 application 모듈 화이트리스트' 에 들어있는 것만 bootJar 활성.
+	val applicationModules = setOf(
+		"order-service",
+		"inventory-service",
+		"product-service",
+		"user-api-gateway",
+	)
 	afterEvaluate {
-		tasks.findByName("bootJar")?.enabled = false
+		if (project.name !in applicationModules) {
+			tasks.findByName("bootJar")?.enabled = false
+		}
 	}
 }

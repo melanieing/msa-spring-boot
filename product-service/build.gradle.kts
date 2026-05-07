@@ -31,6 +31,9 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
 }
 
+// 이 모듈은 application — root subprojects 의 default 비활성을 override 해서 bootJar 활성.
+tasks.named("bootJar") { enabled = true }
+
 sourceSets{
     getByName("main"){
         java {
