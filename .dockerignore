@@ -1,0 +1,49 @@
+# ─────────────────────────────────────────────────────────────────────────
+# .dockerignore — docker build context 에 포함 안 시킬 것들
+# ─────────────────────────────────────────────────────────────────────────
+# 이 파일이 있으면 docker build 시 여기 패턴에 매치되는 파일은 build context 로
+# 전송 안 됨 → 빌드 빠르고 이미지 작아짐.
+
+# Gradle 빌드 산출물 (어차피 Dockerfile 안에서 다시 빌드함)
+**/build/
+**/.gradle/
+.gradle/
+
+# IDE / 에디터
+.idea/
+.vscode/
+*.iws
+*.iml
+*.ipr
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Claude Code 메타데이터
+.claude/
+
+# 문서 / 설정 (런타임에 안 필요)
+*.md
+LICENSE
+docs/
+
+# 로그 / 임시 파일
+*.log
+out/
+/bin/
+
+# OS 파일
+.DS_Store
+Thumbs.db
+
+# 다른 컨테이너 컴포즈 (로컬 dev 용, 이미지에 들어갈 필요 X)
+container-compose.yaml
+
+# 환경 변수 파일 (시크릿 유출 방지)
+.env
+.env.*
+
+# Dockerfile 자체는 build context 에 있어야 함 (-f 로 지정해도)
+# 그래서 Dockerfile, .dockerignore 자체는 ignore X
