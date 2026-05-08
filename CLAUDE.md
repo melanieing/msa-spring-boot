@@ -160,6 +160,18 @@ CLAUDE.md (원칙) ↔ STACK.md (버전) ↔ BACKLOG.md (진행 상황) — **�
   `platform/` (operators / data / observability) + `applications/` (비어있음 — Helm 차트는
   msa-spring-boot 레포의 `charts/services/*`에 거주, ApplicationSet의 Git Generator가 자동
   발견).
+- 2026-05-11 추가: **emberstack/reflector 10.0.41** 도입 (PDF 미명시). Issue L
+  (cross-namespace Secret 자동화) 의 영구 fix. CNPG `<cluster>-app` Secret 과
+  redis-secret 을 `data` namespace → microservice namespace 로 reflector
+  annotation 으로 자동 복제. PDF 는 Sealed Secrets 를 시사하지만 학습 단계 +
+  단순한 cross-ns 복제 요구라 더 가벼운 reflector (단일 Deployment) 채택.
+  Phase C-1 (JWT secret 옮기기) 와 추후 Sealed Secrets 도입 시 재검토.
+- 2026-05-11 추가: 4개 service `application.yaml` 의 비표준 actuator
+  base-path (`management.endpoints.web.base-path: /` + path-mapping.health:
+  healthz) 제거. 이게 user-api-gateway 의 graceful shutdown root cause
+  였음 (chart probe `/actuator/health/liveness` ↔ 실제 endpoint
+  `/healthz/liveness` 불일치). default `/actuator` 복원 + Dockerfile
+  HEALTHCHECK 와 일관성 회복.
 - Phase B-1 완료 (2026-05-08): 매니페스트 리포의 platform/ 빈 공간 채움 + 전체 tech
   stack 을 2026-05 기준 최신 안정 버전으로 정합성 맞춤.
   - 6개 platform Application 차트 버전: CNPG 0.28.0, **Strimzi 1.0.0** (메이저 — Kafka
