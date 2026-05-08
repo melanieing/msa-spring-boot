@@ -45,6 +45,10 @@ env:
   # Kafka — Strimzi 가 만든 'kafka-kafka-bootstrap' service (default 이름)
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-kafka-bootstrap.data.svc.cluster.local:9092
 
+# CNPG 가 자동 생성한 DB Secret. 'password' 키가 deployment.yaml 의 valueFrom.secretKeyRef
+# 로 SPRING_DATASOURCE_PASSWORD 에 주입됨.
+dbSecretName: order-db-app
+
 serviceAccount:
   create: true
   name: ""

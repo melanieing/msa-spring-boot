@@ -52,6 +52,17 @@ spec:
             - configMapRef:
                 name: {{ include "service.fullname" . }}-config
 
+          # CNPG 가 자동 생성한 DB Secret 의 password 키를 SPRING_DATASOURCE_PASSWORD 로 주입.
+          # values.yaml 의 dbSecretName 이 설정된 경우만 적용 (gateway 처럼 DB 없는 서비스는 skip).
+          {{- if .Values.dbSecretName }}
+          env:
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.dbSecretName }}
+                  key: password
+          {{- end }}
+
           # health probe 는 'http' named port 를 사용 (모든 서비스가 actuator 노출)
           livenessProbe:
             httpGet:
