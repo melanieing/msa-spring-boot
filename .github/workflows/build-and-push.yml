@@ -110,3 +110,59 @@ jobs:
           echo "- service: \`${{ matrix.service }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- registry: \`${{ steps.ecr-login.outputs.registry }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- tags: \`${{ github.sha }}\`, \`latest\`" >> $GITHUB_STEP_SUMMARY
+
+
+  # ─────────────────────────────────────────────────────────────────────
+  # D11 — Trivy 컨테이너 취약점 스캔 (build job 후속)
+  # ─────────────────────────────────────────────────────────────────────
+  # ECR 의 scan_on_push (AWS 기본 스캔) 와 별개로 aquasecurity/trivy 로 더
+  # 자세한 OS + library 취약점 검사. 운영급 GHA pipeline 의 표준 단계.
+  #
+  # 학습용 정책 — exit-code: '0' 으로 vulnerabilities 발견해도 fail 시키지 않음.
+  # 운영급은 exit-code: '1' + severity: CRITICAL 만이라도 막아서 push 차단.
+  #
+  # matrix 4 service 병렬. needs: build → 모든 service build 끝난 후 시작.
+  trivy-scan:
+    name: Trivy scan ${{ matrix.service }}
+    needs: build
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - user-api-gateway
+          - product-service
+          - order-service
+          - inventory-service
+
+    steps:
+      # build job 과 동일한 OIDC role assume → ECR pull 권한 받음.
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Trivy 가 image 를 pull 후 layer 별로 OS 패키지 + 라이브러리 취약점 검사.
+      # ignore-unfixed: 패치 없는 취약점은 보고서에서 제외 (action 가능한 것만).
+      # severity: CRITICAL/HIGH 만 출력 (LOW/MEDIUM 노이즈 제거).
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.ecr-login.outputs.registry }}/${{ matrix.service }}:${{ github.sha }}
+          format: 'table'
+          exit-code: '0'           # 학습용 — 취약점 있어도 workflow fail X
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Trivy summary
+        if: always()
+        run: |
+          echo "## Trivy scan: ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
+          echo "스캔 결과는 위 step 의 로그 참조. 학습용이라 취약점 발견해도 workflow 통과." >> $GITHUB_STEP_SUMMARY
