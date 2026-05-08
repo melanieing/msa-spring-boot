@@ -1,0 +1,20 @@
+# notification-service Helm chart (C5)
+# 다른 4 service chart 와 동일 templates 패턴 (단일 포트, gateway 와 비슷).
+apiVersion: v2
+name: notification-service
+description: |
+  Market Service MSA 의 5번째 마이크로서비스 — 알림 처리 (학습용 스텁).
+  Kafka 4 토픽 구독 → logger.info 단일 채널.
+
+version: 0.1.0
+appVersion: "0.0.1-SNAPSHOT"
+
+type: application
+
+keywords:
+  - msa
+  - notification
+  - kafka-consumer
+
+maintainers:
+  - name: melanieing

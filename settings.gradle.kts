@@ -32,4 +32,5 @@ include(
     "auth",
     "client-ses",
     "user-api-gateway",
+    "notification-service",
 )

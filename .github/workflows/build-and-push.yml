@@ -58,6 +58,7 @@ jobs:
           - product-service
           - order-service
           - inventory-service
+          - notification-service                 # C5 (2026-05-12 추가)
 
     steps:
       # ─── 1. 코드 체크아웃 ───────────────────────────────────────
@@ -135,6 +136,7 @@ jobs:
           - product-service
           - order-service
           - inventory-service
+          - notification-service                 # C5 (2026-05-12 추가)
 
     steps:
       # build job 과 동일한 OIDC role assume → ECR pull 권한 받음.

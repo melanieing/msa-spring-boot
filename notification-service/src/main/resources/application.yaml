@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: notification-service
+
+  kafka:
+    bootstrap-servers: localhost:7003                            # 로컬 docker-compose default. K8s 에서는 chart env 로 override.
+
+    consumer:
+      group-id: notification-service-group
+      auto-offset-reset: earliest                                # 학습용 — 처음 구독 시 가장 오래된 메시지부터
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: '*'                        # 학습용 — 모든 패키지 deserialize 허용
+
+server:
+  port: 8004
+
+management:
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true                                            # K8s liveness/readiness 자동 활성 (base-path fix 후 표준)

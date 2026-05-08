@@ -1,0 +1,64 @@
+# notification-service 차트 기본값 (C5).
+# 다른 backend (product/order/inventory) 와 차이: DB 없음, gRPC 없음 (Kafka consumer 만).
+
+image:
+  repository: 601766312629.dkr.ecr.ap-northeast-2.amazonaws.com/notification-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+
+# 단일 포트 (HTTP only — actuator probe 용. Kafka consumer 는 outbound 라 listener 포트 없음).
+ports:
+  - name: http
+    containerPort: 8004
+    servicePort: 80
+
+# 학습용 작게. notification 은 가벼운 logger 작업만.
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+healthcheck:
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    failureThreshold: 3
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 3
+
+env:
+  SPRING_PROFILES_ACTIVE: production
+  # Kafka — Strimzi 가 만든 'kafka-kafka-bootstrap' service (Issue N 의 watchAnyNamespace 후 정상 동작)
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-kafka-bootstrap.data.svc.cluster.local:9092
+  MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
+
+# DB Secret 없음 (notification 은 PG 미사용)
+# Redis Secret 없음 (notification 은 Redis 미사용)
+# JWT Secret 없음 (notification 은 외부 호출 받지 않음 — Kafka 만)
+
+serviceAccount:
+  create: true
+  name: ""
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop: [ALL]
