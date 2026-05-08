@@ -43,6 +43,9 @@ env:
   SPRING_PROFILES_ACTIVE: production
   SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-db-rw.data.svc.cluster.local:5432/inventory
   SPRING_DATASOURCE_USERNAME: inventory_app
+  # Spring Boot 의 actuator probe sub-path (/actuator/health/liveness, /readiness) 강제 활성.
+  # 자동 K8s 감지가 실패하는 경우 대비. 이거 없으면 probe 가 404 → liveness 실패 → K8s 가 kill.
+  MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-kafka-bootstrap.data.svc.cluster.local:9092
   # Redis Cluster — ot-helm 의 RedisCluster CRD 가 만든 service
   SPRING_REDIS_HOST: redis-leader.data.svc.cluster.local
