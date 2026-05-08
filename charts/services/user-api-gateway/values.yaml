@@ -67,12 +67,13 @@ healthcheck:
 # ─── 환경 변수 (configmap.yaml 이 K8s ConfigMap 으로 주입) ──────
 env:
   SPRING_PROFILES_ACTIVE: production
-  # 필요한 환경 변수 추가:
-  # - DB connection (다른 마이크로서비스로 위임이 일반적)
-  # - gRPC client target hosts (다른 service 의 ClusterIP DNS)
+  # gRPC client target hosts (다른 service 의 ClusterIP DNS)
   GRPC_PRODUCT_HOST: product-service.product-service.svc.cluster.local
   GRPC_ORDER_HOST: order-service.order-service.svc.cluster.local
   GRPC_INVENTORY_HOST: inventory-service.inventory-service.svc.cluster.local
+  # Spring Boot actuator probe sub-path (/actuator/health/liveness, /readiness) 강제 활성.
+  # 이거 없으면 probe 가 404 → liveness 실패 → K8s 가 kill (graceful shutdown).
+  MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
 
 
 # ─── ServiceAccount (K8s 권한 분리) ──────────────────────────────

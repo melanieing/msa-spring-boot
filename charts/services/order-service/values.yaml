@@ -44,6 +44,8 @@ env:
   SPRING_DATASOURCE_USERNAME: order_app
   # Kafka — Strimzi 가 만든 'kafka-kafka-bootstrap' service (default 이름)
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-kafka-bootstrap.data.svc.cluster.local:9092
+  # Spring Boot actuator probe sub-path (/actuator/health/liveness, /readiness) 강제 활성.
+  MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
 
 # CNPG 가 자동 생성한 DB Secret. 'password' 키가 deployment.yaml 의 valueFrom.secretKeyRef
 # 로 SPRING_DATASOURCE_PASSWORD 에 주입됨.
