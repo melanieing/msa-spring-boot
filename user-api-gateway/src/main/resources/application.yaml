@@ -2,6 +2,15 @@ spring:
   application:
     name: user-api-gateway
 
+  # C2 Rate Limit: Redis Cluster (학습용 default localhost). K8s 에서는 chart env 로
+  # SPRING_DATA_REDIS_CLUSTER_NODES 와 SPRING_DATA_REDIS_PASSWORD override.
+  data:
+    redis:
+      cluster:
+        nodes: localhost:6379
+        max-redirects: 3
+      timeout: 2s
+
 grpc:
   client:
     product-service:
@@ -18,7 +27,52 @@ jwt:
   # C8: 평문 하드코딩 제거. K8s 환경에서는 chart 의 secret.yaml → envFrom 으로
   # JWT_SECRET env 가 주입됨. local docker-compose 등 K8s 외 환경에서는 fallback
   # 값 사용 (운영 시 절대 fallback 사용 X).
-  secret: ${JWT_SECRET:dev-only-fallback-do-not-use-in-prod}
+  secret: ${JWT_SECRET:dev-only-fallback-do-not-use-in-prod-must-be-at-least-32-chars}
+  # 토큰 유효 시간 (초) — 학습용 1시간
+  expiration-seconds: 3600
+
+# C1 학습용 demo user (운영급은 user-service 통합 — descope).
+# /login endpoint 가 이 username/password 로 검증 후 JWT 발급.
+auth:
+  demo-user:
+    username: ${DEMO_USERNAME:admin}
+    password: ${DEMO_PASSWORD:admin}
+
+# C2 Rate Limit 설정 — Redisson 의 RRateLimiter (cluster 호환).
+# 학습용: 사용자/IP 당 초당 10 요청, burst 20 까지 허용.
+rate-limit:
+  rate: 10
+  capacity: 20
+
+# C3 Circuit Breaker — gateway 가 gRPC client 호출 시 backend 장애 격리.
+# 'OPEN' 상태에서는 fallback 즉시 응답 (학습용은 빈 list / 503).
+resilience4j:
+  circuitbreaker:
+    instances:
+      productService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10              # 최근 10 호출 평가
+        failureRateThreshold: 50           # 50% 이상 실패 시 OPEN
+        waitDurationInOpenState: 10s       # OPEN 후 10초 뒤 HALF_OPEN
+        permittedNumberOfCallsInHalfOpenState: 3
+        slowCallDurationThreshold: 2s      # 2초 이상 응답 = slow
+        slowCallRateThreshold: 50
+      orderService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slowCallDurationThreshold: 2s
+        slowCallRateThreshold: 50
+      inventoryService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slowCallDurationThreshold: 2s
+        slowCallRateThreshold: 50
 
 server:
   port: 8100

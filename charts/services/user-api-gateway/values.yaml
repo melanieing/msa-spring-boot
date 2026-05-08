@@ -75,6 +75,16 @@ env:
   # 이거 없으면 probe 가 404 → liveness 실패 → K8s 가 kill (graceful shutdown).
   MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
 
+  # ─── C2 Rate Limit (Redis Cluster) ────────────────────────────────
+  # gateway 가 RateLimitWebFilter 의 RRateLimiter (Redisson) 사용.
+  # inventory-service 와 동일 Redis Cluster service 공유 (CLAUDE.md §1 의 stack 일관).
+  SPRING_DATA_REDIS_CLUSTER_NODES: redis-leader.data.svc.cluster.local:6379
+
+# C2 — reflector 가 data → user-api-gateway ns 로 복제한 redis-secret 의 'password' 키를
+# SPRING_DATA_REDIS_PASSWORD env 에 valueFrom secretKeyRef 로 주입. (Issue L 패턴 재사용)
+# ⚠️ redis-cluster.yaml 의 reflector annotation 에 user-api-gateway ns 추가 필요 (기존엔 inventory-service 만).
+redisSecretName: redis-secret
+
 
 # ─── JWT 서명 비밀번호 (C8) ──────────────────────────────────────
 # templates/secret.yaml 이 이 값을 K8s Secret 으로 만들고, deployment.yaml 의

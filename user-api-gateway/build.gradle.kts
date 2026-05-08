@@ -3,6 +3,7 @@ object Versions {
     const val GRPC_KOTLIN = "1.4.1"
     const val GRPC_PROTO = "1.80.0"
     const val JWT = "0.12.6"
+    const val RESILIENCE4J = "2.2.0"                 // C3 — Spring Boot 3.5 호환 마지막 안정
 }
 
 plugins {
@@ -37,6 +38,18 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-impl:${Versions.JWT}")
 
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:${Versions.JWT}")
+
+    // C2 — Rate Limit 위한 Redis(Cluster) + Redisson.
+    // client-redis 모듈에 redisson-spring-boot-starter 가 'implementation' 으로 들어가있어
+    // 다른 모듈에서 transitive 로 못 보임. user-api-gateway 가 RRateLimiter 직접 사용하므로 직접 추가.
+    implementation(project(":client-redis"))
+    implementation("org.redisson:redisson-spring-boot-starter:3.27.2")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
+
+    // C3 — Resilience4j Circuit Breaker (gRPC client 호출 보호 + suspend 코루틴 지원).
+    implementation("io.github.resilience4j:resilience4j-spring-boot3:${Versions.RESILIENCE4J}")
+    implementation("io.github.resilience4j:resilience4j-kotlin:${Versions.RESILIENCE4J}")
+    implementation("io.github.resilience4j:resilience4j-reactor:${Versions.RESILIENCE4J}")
 }
 
 // 이 모듈은 application — root subprojects 의 default 비활성을 override 해서 bootJar 활성.
