@@ -99,6 +99,17 @@ CLAUDE.md (원칙) ↔ STACK.md (버전) ↔ BACKLOG.md (진행 상황) — **�
   본인 소유의 레포로 교체해야 함.
 - **PDF와 다른 결정을 내릴 때마다 그 사실을 명시**: PR 설명, CLAUDE.md, 또는 발표 자료에
   적어 둔다 ("PDF는 X, 본 구현은 Y, 이유는 Z").
+- **SSH key path 영구 원칙** (2026-05-09 + 2026-05-10 두 번 트랩 후 영구 fix):
+  - 키 파일은 항상 `~/.ssh/ktcloud-bastion-node-key{,.pub}` (Windows 와 WSL 양쪽에 둠).
+  - terraform 변수에 **Windows 절대경로 (`C:/Users/...`) 절대 override 금지** —
+    terraform.exe (Windows side) 는 통과하지만 WSL ansible 이 키 못 찾아 silently fail.
+  - `ssh_private_key_path` 변수는 의도적으로 **제거됨**. `inventory.tftpl` 이
+    `ssh_key_name` 에서 `~/.ssh/${ssh_key_name}` 자동 derive.
+  - `ssh_public_key_path` 는 살아있지만 `file(pathexpand(...))` 로 wrap 되어
+    `~/...` default 가 Windows + Linux 양쪽에서 작동.
+  - `cluster-bootstrap.ps1` 의 Step 0 pre-flight check 가 회귀 차단.
+  - 자세한 background 는 `msa-provisioning/terraform/variables.tf` 의
+    ssh_public_key_path 위 주석 참조.
 
 ## 5. 비용 디시플린
 
