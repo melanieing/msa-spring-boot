@@ -47,10 +47,15 @@ env:
   # 자동 K8s 감지가 실패하는 경우 대비. 이거 없으면 probe 가 404 → liveness 실패 → K8s 가 kill.
   MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-kafka-bootstrap.data.svc.cluster.local:9092
-  # Redis Cluster — ot-helm 의 RedisCluster CRD 가 만든 service
-  SPRING_REDIS_HOST: redis-leader.data.svc.cluster.local
-  SPRING_REDIS_PORT: "6379"
-  # 비밀번호는 K8s Secret 'redis-secret' 에서 envFrom 으로 가져와야 함 (현재 placeholder)
+
+  # ─── Redis Cluster ────────────────────────────────────────────────
+  # Spring Boot 3.x relaxed binding: spring.data.redis.* (Boot 2.x 의 spring.redis.* 는 deprecated/무시됨).
+  # cluster.nodes 가 비어있지 않으면 Spring Data Redis (Lettuce) + Redisson 둘 다 자동으로 cluster 모드로
+  # 빈 생성. seed 노드 1개만 줘도 'CLUSTER NODES' 로 master/replica 6개 topology 자동 발견.
+  # service: ot-helm/redis-operator 의 RedisCluster 가 만든 'redis-leader' (3 master ClusterIP).
+  SPRING_DATA_REDIS_CLUSTER_NODES: redis-leader.data.svc.cluster.local:6379
+  # ⚠️ 학습용 평문. Issue L (reflector) 로 redis-secret 을 cross-namespace 복제 후 secretKeyRef 로 교체 예정.
+  SPRING_DATA_REDIS_PASSWORD: inventory-service
 
 # CNPG 가 자동 생성한 DB Secret. 'password' 키가 deployment.yaml 의 valueFrom.secretKeyRef
 # 로 SPRING_DATASOURCE_PASSWORD 에 주입됨.
