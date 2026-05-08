@@ -21,11 +21,8 @@ grpc:
     port: 9001
 
 management:
-  endpoints:
-    web:
-      base-path: /
-      path-mapping:
-        health: healthz
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
