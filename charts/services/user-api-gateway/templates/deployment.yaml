@@ -51,6 +51,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "service.fullname" . }}-config
+            # JWT 비밀번호 Secret (C8). secret.yaml 이 만든 Secret 의 모든 키를
+            # env 로 주입. JWT_SECRET → application.yaml 의 ${JWT_SECRET} 매칭.
+            {{- if .Values.jwtSecret }}
+            - secretRef:
+                name: {{ include "service.fullname" . }}-jwt
+            {{- end }}
 
           # Secret-derived env 는 reflector (Issue L) 가 자기 ns 로 복제한 Secret 을 secretKeyRef 로 주입:
           #   - dbSecretName: CNPG 가 만든 '<cluster>-app' Secret → SPRING_DATASOURCE_PASSWORD (모든 backend)

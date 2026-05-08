@@ -76,6 +76,14 @@ env:
   MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
 
 
+# ─── JWT 서명 비밀번호 (C8) ──────────────────────────────────────
+# templates/secret.yaml 이 이 값을 K8s Secret 으로 만들고, deployment.yaml 의
+# envFrom secretRef 가 JWT_SECRET env 로 주입. application.yaml 의
+# ${JWT_SECRET} placeholder 가 매칭됨.
+# ⚠️ 학습용 평문. 운영급은 Sealed Secrets / External Secrets / AWS Secrets Manager.
+jwtSecret: 'v7S6A9yB2E5H8KcNfUjXnZr4u7x!A%D*G-'
+
+
 # ─── ServiceAccount (K8s 권한 분리) ──────────────────────────────
 serviceAccount:
   create: true                        # 차트마다 전용 SA 생성 (least privilege)

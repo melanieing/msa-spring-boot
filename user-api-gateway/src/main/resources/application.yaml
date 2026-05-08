@@ -15,7 +15,10 @@ grpc:
       negotiation-type: plaintext
 
 jwt:
-  secret: 'v7S6A9yB2E5H8KcNfUjXnZr4u7x!A%D*G-'
+  # C8: 평문 하드코딩 제거. K8s 환경에서는 chart 의 secret.yaml → envFrom 으로
+  # JWT_SECRET env 가 주입됨. local docker-compose 등 K8s 외 환경에서는 fallback
+  # 값 사용 (운영 시 절대 fallback 사용 X).
+  secret: ${JWT_SECRET:dev-only-fallback-do-not-use-in-prod}
 
 server:
   port: 8100
