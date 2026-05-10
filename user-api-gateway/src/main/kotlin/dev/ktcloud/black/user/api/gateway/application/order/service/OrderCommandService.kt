@@ -6,7 +6,8 @@ import dev.ktcloud.black.order.service.adapter.presentation.web.inbound.grpc.Ord
 import dev.ktcloud.black.order.service.adapter.presentation.web.inbound.grpc.OrderServiceGrpcKt
 import dev.ktcloud.black.user.api.gateway.application.order.dto.OrderLineItemDto
 import dev.ktcloud.black.user.api.gateway.application.order.port.inbound.CreateOrderCommand
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import io.github.resilience4j.kotlin.circuitbreaker.executeSuspendFunction
 import net.devh.boot.grpc.client.inject.GrpcClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -14,9 +15,11 @@ import org.springframework.stereotype.Service
 @Service
 class OrderCommandService(
     @GrpcClient("order-service")
-    private val orderServiceStub: OrderServiceGrpcKt.OrderServiceCoroutineStub
+    private val orderServiceStub: OrderServiceGrpcKt.OrderServiceCoroutineStub,
+    circuitBreakerRegistry: CircuitBreakerRegistry,
 ): CreateOrderCommand {
     private val log = LoggerFactory.getLogger(javaClass)
+    private val circuitBreaker = circuitBreakerRegistry.circuitBreaker("orderService")
     private fun mapOrderLineItem(orderLineItem: OrderListItemResponseDto): OrderLineItemDto {
         return OrderLineItemDto(
             inventoryId = orderLineItem.inventoryId,
@@ -28,35 +31,34 @@ class OrderCommandService(
         )
     }
 
-    @CircuitBreaker(name = "orderService", fallbackMethod = "createOrderFallback")
     override suspend fun createOrder(command: List<CreateOrderCommand.In>): CreateOrderCommand.Out {
-        val createOrderRequestItems = command.map {
-            CreateOrderRequestItem.newBuilder()
-                .setInventoryId(it.inventoryId)
-                .setProductId(it.productId)
-                .setSkuCode(it.skuCode)
-                .setPrice(it.price)
-                .setQuantity(it.quantity)
-                .build()
+        return runCatching {
+            circuitBreaker.executeSuspendFunction {
+                val createOrderRequestItems = command.map {
+                    CreateOrderRequestItem.newBuilder()
+                        .setInventoryId(it.inventoryId)
+                        .setProductId(it.productId)
+                        .setSkuCode(it.skuCode)
+                        .setPrice(it.price)
+                        .setQuantity(it.quantity)
+                        .build()
+                }
+
+                val createdResponse = orderServiceStub.createOrder(
+                    CreateOrderRequest.newBuilder()
+                        .addAllItems(createOrderRequestItems)
+                        .build()
+                )
+
+                CreateOrderCommand.Out(
+                    id = createdResponse.id,
+                    status = createdResponse.status,
+                    orderLineItems = createdResponse.orderLineItemsList.map(::mapOrderLineItem)
+                )
+            }
+        }.getOrElse { e ->
+            log.warn("[CB-fallback] orderService.createOrder failed (${e::class.simpleName}: ${e.message}) — returning UNAVAILABLE order")
+            CreateOrderCommand.Out(id = -1L, status = "UNAVAILABLE", orderLineItems = emptyList())
         }
-
-        val createdResponse = orderServiceStub.createOrder(
-            CreateOrderRequest.newBuilder()
-                .addAllItems(createOrderRequestItems)
-                .build()
-        )
-
-        return CreateOrderCommand.Out(
-            id = createdResponse.id,
-            status = createdResponse.status,
-            orderLineItems = createdResponse.orderLineItemsList.map(::mapOrderLineItem)
-        )
-    }
-
-    // 주문 생성 fallback — 학습용. 운영급에서는 reservation queue 또는 503 throw.
-    @Suppress("UNUSED_PARAMETER")
-    private suspend fun createOrderFallback(command: List<CreateOrderCommand.In>, e: Throwable): CreateOrderCommand.Out {
-        log.warn("[CB-fallback] orderService.createOrder failed (${e::class.simpleName}: ${e.message}) — returning UNAVAILABLE order")
-        return CreateOrderCommand.Out(id = -1L, status = "UNAVAILABLE", orderLineItems = emptyList())
     }
 }

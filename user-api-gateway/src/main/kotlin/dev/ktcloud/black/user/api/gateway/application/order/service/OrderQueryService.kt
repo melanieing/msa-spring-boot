@@ -7,7 +7,8 @@ import dev.ktcloud.black.order.service.adapter.presentation.web.inbound.grpc.Ord
 import dev.ktcloud.black.user.api.gateway.application.order.dto.OrderLineItemDto
 import dev.ktcloud.black.user.api.gateway.application.order.port.inbound.FetchOrderQuery
 import dev.ktcloud.black.user.api.gateway.application.order.port.inbound.FetchOrdersQuery
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import io.github.resilience4j.kotlin.circuitbreaker.executeSuspendFunction
 import net.devh.boot.grpc.client.inject.GrpcClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -15,9 +16,11 @@ import org.springframework.stereotype.Service
 @Service
 class OrderQueryService(
     @GrpcClient("order-service")
-    private val orderServiceStub: OrderServiceGrpcKt.OrderServiceCoroutineStub
+    private val orderServiceStub: OrderServiceGrpcKt.OrderServiceCoroutineStub,
+    circuitBreakerRegistry: CircuitBreakerRegistry,
 ): FetchOrderQuery, FetchOrdersQuery {
     private val log = LoggerFactory.getLogger(javaClass)
+    private val circuitBreaker = circuitBreakerRegistry.circuitBreaker("orderService")
 
     private fun mapOrderLineItem(orderLineItem: OrderListItemResponseDto): OrderLineItemDto {
         return OrderLineItemDto(
@@ -30,43 +33,39 @@ class OrderQueryService(
         )
     }
 
-    @CircuitBreaker(name = "orderService", fallbackMethod = "fetchOrderFallback")
     override suspend fun fetchOrder(query: FetchOrderQuery.In): FetchOrderQuery.Out {
-        val response = orderServiceStub.fetchOrder(
-            FetchOrderRequest.newBuilder()
-                .setId(query.id)
-                .build()
-        )
-
-        return FetchOrderQuery.Out(
-            id = response.id,
-            status = response.status,
-            orderLineItems = response.orderLineItemsList.map(::mapOrderLineItem)
-        )
-    }
-
-    @CircuitBreaker(name = "orderService", fallbackMethod = "fetchOrdersFallback")
-    override suspend fun fetchOrders(): List<FetchOrdersQuery.Out> {
-        val response = orderServiceStub.fetchOrders(Empty.getDefaultInstance())
-
-        return response.ordersList.map {
-            FetchOrdersQuery.Out(
-                id = it.id,
-                status = it.status,
-                orderLineItems = it.orderLineItemsList.map(::mapOrderLineItem)
-            )
+        return runCatching {
+            circuitBreaker.executeSuspendFunction {
+                val response = orderServiceStub.fetchOrder(
+                    FetchOrderRequest.newBuilder().setId(query.id).build()
+                )
+                FetchOrderQuery.Out(
+                    id = response.id,
+                    status = response.status,
+                    orderLineItems = response.orderLineItemsList.map(::mapOrderLineItem)
+                )
+            }
+        }.getOrElse { e ->
+            log.warn("[CB-fallback] orderService.fetchOrder failed (${e::class.simpleName}: ${e.message}) — returning empty")
+            FetchOrderQuery.Out(id = query.id, status = "UNAVAILABLE", orderLineItems = emptyList())
         }
     }
 
-    @Suppress("UNUSED_PARAMETER")
-    private suspend fun fetchOrderFallback(query: FetchOrderQuery.In, e: Throwable): FetchOrderQuery.Out {
-        log.warn("[CB-fallback] orderService.fetchOrder failed (${e::class.simpleName}: ${e.message}) — returning empty")
-        return FetchOrderQuery.Out(id = query.id, status = "UNAVAILABLE", orderLineItems = emptyList())
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    private suspend fun fetchOrdersFallback(e: Throwable): List<FetchOrdersQuery.Out> {
-        log.warn("[CB-fallback] orderService.fetchOrders failed (${e::class.simpleName}: ${e.message}) — returning empty list")
-        return emptyList()
+    override suspend fun fetchOrders(): List<FetchOrdersQuery.Out> {
+        return runCatching {
+            circuitBreaker.executeSuspendFunction {
+                val response = orderServiceStub.fetchOrders(Empty.getDefaultInstance())
+                response.ordersList.map {
+                    FetchOrdersQuery.Out(
+                        id = it.id,
+                        status = it.status,
+                        orderLineItems = it.orderLineItemsList.map(::mapOrderLineItem)
+                    )
+                }
+            }
+        }.getOrElse { e ->
+            log.warn("[CB-fallback] orderService.fetchOrders failed (${e::class.simpleName}: ${e.message}) — returning empty list")
+            emptyList()
+        }
     }
 }
