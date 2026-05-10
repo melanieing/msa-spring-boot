@@ -69,9 +69,13 @@ RUN java -Djarmode=layertools -jar app.jar extract
 # ═════════════════════════════════════════════════════════════════════
 FROM eclipse-temurin:21-jre
 
-# D2 (2026-05-12) — OpenTelemetry Java agent 통합. Spring Boot 코드 변경 0,
-# auto-instrumentation 으로 HTTP/gRPC/JDBC/Kafka 등 자동 trace.
-ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.27.0/opentelemetry-javaagent.jar /opt/otel/otel-agent.jar
+# D2 (2026-05-12) + X fix (2026-05-13) — OpenTelemetry Java agent.
+# Docker BuildKit 의 'ADD <URL>' 가 GitHub releases 의 redirect 처리 못 함 → HTML
+# 응답 저장 → JVM javaagent fail. RUN wget + size 검증 패턴으로 변경.
+RUN mkdir -p /opt/otel && \
+    wget -q -O /opt/otel/otel-agent.jar \
+    https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.27.0/opentelemetry-javaagent.jar && \
+    test -s /opt/otel/otel-agent.jar
 
 # non-root 사용자 생성 + 사용 (보안 best practice)
 RUN useradd --system --user-group --create-home --shell /sbin/nologin spring

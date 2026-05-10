@@ -32,8 +32,11 @@ COPY --from=build /workspace/user-api-gateway/build/libs/*.jar app.jar
 RUN java -Djarmode=layertools -jar app.jar extract
 
 FROM eclipse-temurin:21-jre
-# D2 (2026-05-12) — OpenTelemetry Java agent
-ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.27.0/opentelemetry-javaagent.jar /opt/otel/otel-agent.jar
+# D2 + X fix (2026-05-13) — RUN wget (ADD URL redirect 실패 fix)
+RUN mkdir -p /opt/otel && \
+    wget -q -O /opt/otel/otel-agent.jar \
+    https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.27.0/opentelemetry-javaagent.jar && \
+    test -s /opt/otel/otel-agent.jar
 RUN useradd --system --user-group --create-home --shell /sbin/nologin spring
 USER spring
 WORKDIR /app
