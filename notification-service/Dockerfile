@@ -61,6 +61,9 @@ RUN java -Djarmode=layertools -jar app.jar extract
 # ═════════════════════════════════════════════════════════════════════
 FROM eclipse-temurin:21-jre
 
+# D2 (2026-05-12) — OpenTelemetry Java agent
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.27.0/opentelemetry-javaagent.jar /opt/otel/otel-agent.jar
+
 # non-root 사용자 생성 + 사용 (보안 best practice)
 RUN useradd --system --user-group --create-home --shell /sbin/nologin spring
 USER spring
@@ -76,4 +79,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:8004/actuator/health || exit 1
 
 EXPOSE 8004
-ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
+ENTRYPOINT ["java", "-javaagent:/opt/otel/otel-agent.jar", "org.springframework.boot.loader.launch.JarLauncher"]

@@ -56,6 +56,14 @@ env:
   SPRING_DATA_REDIS_CLUSTER_NODES: redis-leader.data.svc.cluster.local:6379
   # SPRING_DATA_REDIS_PASSWORD 는 redisSecretName 으로 deployment.yaml 이 secretKeyRef 자동 주입.
 
+  # D2 OTel agent (Dockerfile -javaagent 활성)
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector-opentelemetry-collector.monitoring.svc.cluster.local:4317"
+  OTEL_SERVICE_NAME: inventory-service
+  OTEL_RESOURCE_ATTRIBUTES: "service.namespace=ktcloud-msa,deployment.environment=production"
+  OTEL_TRACES_EXPORTER: otlp
+  OTEL_METRICS_EXPORTER: otlp
+  OTEL_LOGS_EXPORTER: none
+
 # reflector 가 data → inventory-service ns 로 복제한 redis-secret 의 'password' 키를
 # SPRING_DATA_REDIS_PASSWORD env 에 valueFrom secretKeyRef 로 주입. (Issue L)
 redisSecretName: redis-secret

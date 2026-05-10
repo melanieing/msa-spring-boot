@@ -47,6 +47,14 @@ env:
   # Spring Boot actuator probe sub-path (/actuator/health/liveness, /readiness) 강제 활성.
   MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
 
+  # D2 OTel agent (Dockerfile -javaagent 활성)
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector-opentelemetry-collector.monitoring.svc.cluster.local:4317"
+  OTEL_SERVICE_NAME: order-service
+  OTEL_RESOURCE_ATTRIBUTES: "service.namespace=ktcloud-msa,deployment.environment=production"
+  OTEL_TRACES_EXPORTER: otlp
+  OTEL_METRICS_EXPORTER: otlp
+  OTEL_LOGS_EXPORTER: none
+
 # CNPG 가 자동 생성한 DB Secret. 'password' 키가 deployment.yaml 의 valueFrom.secretKeyRef
 # 로 SPRING_DATASOURCE_PASSWORD 에 주입됨.
 dbSecretName: order-db-app

@@ -44,6 +44,14 @@ env:
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-kafka-bootstrap.data.svc.cluster.local:9092
   MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
 
+  # D2 OTel agent (Dockerfile -javaagent 활성)
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector-opentelemetry-collector.monitoring.svc.cluster.local:4317"
+  OTEL_SERVICE_NAME: notification-service
+  OTEL_RESOURCE_ATTRIBUTES: "service.namespace=ktcloud-msa,deployment.environment=production"
+  OTEL_TRACES_EXPORTER: otlp
+  OTEL_METRICS_EXPORTER: otlp
+  OTEL_LOGS_EXPORTER: none
+
 # DB Secret 없음 (notification 은 PG 미사용)
 # Redis Secret 없음 (notification 은 Redis 미사용)
 # JWT Secret 없음 (notification 은 외부 호출 받지 않음 — Kafka 만)

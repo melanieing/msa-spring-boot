@@ -69,6 +69,10 @@ RUN java -Djarmode=layertools -jar app.jar extract
 # ═════════════════════════════════════════════════════════════════════
 FROM eclipse-temurin:21-jre
 
+# D2 (2026-05-12) — OpenTelemetry Java agent 통합. Spring Boot 코드 변경 0,
+# auto-instrumentation 으로 HTTP/gRPC/JDBC/Kafka 등 자동 trace.
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.27.0/opentelemetry-javaagent.jar /opt/otel/otel-agent.jar
+
 # non-root 사용자 생성 + 사용 (보안 best practice)
 RUN useradd --system --user-group --create-home --shell /sbin/nologin spring
 USER spring
@@ -87,4 +91,6 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
 
 EXPOSE 8002
 EXPOSE 9002
-ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
+# D2 — -javaagent 옵션으로 OTel agent 활성. chart env (OTEL_EXPORTER_OTLP_ENDPOINT)
+# 가 collector 로 trace/metric 송신 endpoint 결정.
+ENTRYPOINT ["java", "-javaagent:/opt/otel/otel-agent.jar", "org.springframework.boot.loader.launch.JarLauncher"]

@@ -32,6 +32,8 @@ COPY --from=build /workspace/inventory-service/build/libs/*.jar app.jar
 RUN java -Djarmode=layertools -jar app.jar extract
 
 FROM eclipse-temurin:21-jre
+# D2 (2026-05-12) — OpenTelemetry Java agent
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.27.0/opentelemetry-javaagent.jar /opt/otel/otel-agent.jar
 RUN useradd --system --user-group --create-home --shell /sbin/nologin spring
 USER spring
 WORKDIR /app
@@ -45,4 +47,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
 
 EXPOSE 8003
 EXPOSE 9003
-ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
+ENTRYPOINT ["java", "-javaagent:/opt/otel/otel-agent.jar", "org.springframework.boot.loader.launch.JarLauncher"]
