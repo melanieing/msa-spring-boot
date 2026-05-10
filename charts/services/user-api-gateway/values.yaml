@@ -67,10 +67,13 @@ healthcheck:
 # ─── 환경 변수 (configmap.yaml 이 K8s ConfigMap 으로 주입) ──────
 env:
   SPRING_PROFILES_ACTIVE: production
-  # gRPC client target hosts (다른 service 의 ClusterIP DNS)
-  GRPC_PRODUCT_HOST: product-service.product-service.svc.cluster.local
-  GRPC_ORDER_HOST: order-service.order-service.svc.cluster.local
-  GRPC_INVENTORY_HOST: inventory-service.inventory-service.svc.cluster.local
+  # gRPC client full address (URL + 포트). application.yaml 의 ${GRPC_*_ADDRESS} placeholder 매칭.
+  # 옛 GRPC_*_HOST env 는 application.yaml property (grpc.client.*-service.address) 와 매핑 안 돼서
+  # gateway 가 default localhost:9001/9002/9003 으로 호출 → Connection refused → 500 cascade.
+  # 사용자 검증 발견 (2026-05-12). placeholder 패턴으로 영구 fix.
+  GRPC_PRODUCT_ADDRESS: "static://product-service.product-service.svc.cluster.local:9001"
+  GRPC_ORDER_ADDRESS: "static://order-service.order-service.svc.cluster.local:9002"
+  GRPC_INVENTORY_ADDRESS: "static://inventory-service.inventory-service.svc.cluster.local:9003"
   # Spring Boot actuator probe sub-path (/actuator/health/liveness, /readiness) 강제 활성.
   # 이거 없으면 probe 가 404 → liveness 실패 → K8s 가 kill (graceful shutdown).
   MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"

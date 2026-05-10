@@ -13,14 +13,18 @@ spring:
 
 grpc:
   client:
+    # K8s 환경에서는 chart env 의 GRPC_*_ADDRESS 가 placeholder 를 override.
+    # local docker-compose 등 K8s 외 환경에서는 fallback 인 'static://localhost:포트' 사용.
+    # ⚠️ 옛 GRPC_*_HOST env 는 application.yaml property 와 매핑 안 돼서 동작 안 함 — 사용자
+    # 검증으로 발견 (2026-05-12). placeholder 명시로 영구 해결.
     product-service:
-      address: 'static://localhost:9001'
+      address: ${GRPC_PRODUCT_ADDRESS:static://localhost:9001}
       negotiation-type: plaintext
     order-service:
-      address: 'static://localhost:9002'
+      address: ${GRPC_ORDER_ADDRESS:static://localhost:9002}
       negotiation-type: plaintext
     inventory-service:
-      address: 'static://localhost:9003'
+      address: ${GRPC_INVENTORY_ADDRESS:static://localhost:9003}
       negotiation-type: plaintext
 
 jwt:
