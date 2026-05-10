@@ -72,6 +72,7 @@ subprojects {
 		"inventory-service",
 		"product-service",
 		"user-api-gateway",
+		"notification-service",                  // C5 (2026-05-12 추가) — 5번째 microservice
 	)
 	afterEvaluate {
 		if (project.name !in applicationModules) {
