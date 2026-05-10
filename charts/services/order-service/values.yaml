@@ -3,7 +3,8 @@
 image:
   repository: 601766312629.dkr.ecr.ap-northeast-2.amazonaws.com/order-service
   tag: latest
-  pullPolicy: IfNotPresent
+  # Z fix (2026-05-13) — :latest + IfNotPresent = stale cache anti-pattern. Always 로 ECR digest 매번 확인.
+  pullPolicy: Always
 
 replicaCount: 1
 

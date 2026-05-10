@@ -15,9 +15,12 @@ image:
   # 'latest' 는 편의용. 운영급에서는 git SHA 로 핀 권장 (운영 재현성).
   tag: latest
 
-  # IfNotPresent: 이미 노드에 같은 tag image 있으면 재pull 안 함 (빠름)
-  # Always: 항상 pull (latest 태그 사용 시 최신 보장에 유리하지만 느림)
-  pullPolicy: IfNotPresent
+  # Z fix (2026-05-13) — :latest tag 인데 IfNotPresent 면 K8s 가 캐시 이미지 그대로 사용
+  # → ECR 에 새 image 있어도 Pod 가 옛 broken jar 그대로 (X fix 무력화 사례).
+  # K8s 의 default for :latest 는 Always 였는데 우리가 IfNotPresent 로 override 한 게 root cause.
+  # Always: 매번 ECR 에 digest 확인 (HEAD 요청 1회 비용) → 새 push 자동 반영.
+  # 학습 끝난 뒤엔 :latest → git SHA tag (D1-e) 로 갈 때 IfNotPresent 복귀.
+  pullPolicy: Always
 
 
 # ─── replica 수 ──────────────────────────────────────────────────
