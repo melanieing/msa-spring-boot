@@ -86,6 +86,10 @@ env:
   # ─── D2 OTel agent — auto-instrumentation ─────────────────────────
   # Dockerfile 의 -javaagent 가 활성화. 여기 env 가 collector endpoint + service id 결정.
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector-opentelemetry-collector.monitoring.svc.cluster.local:4317"
+  # Y fix (2026-05-13) — OTel Java agent default protocol = http/protobuf.
+  # 우리 endpoint 는 4317 (gRPC port) → "Connection reset" mismatch.
+  # grpc 명시로 protocol/port 일치.
+  OTEL_EXPORTER_OTLP_PROTOCOL: grpc
   OTEL_SERVICE_NAME: user-api-gateway
   OTEL_RESOURCE_ATTRIBUTES: "service.namespace=ktcloud-msa,deployment.environment=production"
   OTEL_TRACES_EXPORTER: otlp

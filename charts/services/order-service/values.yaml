@@ -49,6 +49,8 @@ env:
 
   # D2 OTel agent (Dockerfile -javaagent 활성)
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector-opentelemetry-collector.monitoring.svc.cluster.local:4317"
+  # Y fix (2026-05-13) — agent default protocol = http/protobuf, endpoint 은 4317 (gRPC) → mismatch.
+  OTEL_EXPORTER_OTLP_PROTOCOL: grpc
   OTEL_SERVICE_NAME: order-service
   OTEL_RESOURCE_ATTRIBUTES: "service.namespace=ktcloud-msa,deployment.environment=production"
   OTEL_TRACES_EXPORTER: otlp
