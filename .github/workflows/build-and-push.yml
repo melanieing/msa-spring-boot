@@ -27,6 +27,9 @@ on:
       - "**/build.gradle.kts"
       - "**/settings.gradle.kts"
       - "**/Dockerfile"
+      - "**/application.yaml"      # R (2026-05-12 추가) — application.yaml 단독 변경 시 자동 trigger
+      - "**/application.yml"
+      - "charts/**"                # R — chart values/templates 변경 시 image 재빌드 (configmap 같은 변경)
       - "gradle/**"
       - ".dockerignore"
       - ".github/workflows/build-and-push.yml"
